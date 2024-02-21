@@ -1,4 +1,5 @@
 # taken from: https://github.com/docker/awesome-compose/tree/master/wordpress-mysql
+# admin url: http://localhost/wp-admin
 services:
   db:
     # We use a mariadb image which supports both amd64 & arm64 architecture
@@ -19,6 +20,8 @@ services:
       - 33060
   wordpress:
     image: wordpress:latest
+    volumes:
+     - wp-content:/var/www/html/wp-content
     ports:
       - 80:80
     restart: always
@@ -29,6 +32,7 @@ services:
       - WORDPRESS_DB_NAME=wordpress
 volumes:
   db_data:
+  wp-content:
 
   
     
