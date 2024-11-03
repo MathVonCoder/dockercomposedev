@@ -1,0 +1,54 @@
+# adapted from: https://antoineperrin.fr/blog/home-assistant-docker-zigbee2mqtt/
+version: '3.8'
+services:
+  #Conteneur Home Assistant
+  homeassistant:
+    image: homeassistant/home-assistant:stable
+    container_name: homeassistant
+    environment:
+      - TZ=Europe/Paris
+    ports:
+    #Le port sur lequel sera accessible l'interface web PORT_EXPORTE:PORT_CONTENEUR
+      - 8123:8123
+    #On définit un "bind mount" pour conserver la configuration de Home-Assistant
+    volumes:
+      - ./home-assistant:/config
+    restart: always
+
+  #Conteneur du broker MQTT Mosquitto
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mqtt
+    #Pas besoin d'exporter de port vers l'extérieur
+    ports:
+      - 1883:1883
+    volumes:
+    #Bind mount pour la configuration
+      - ./mosquitto/config:/mosquitto/config
+    #Volumes pour les logs et les données persistantes
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+
+  #Conteneur ZigBee2MQTT
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt
+    container_name: zigbee2mqtt
+    depends_on:
+    #Le conteneur mosquitto doit être démarré pour lancer le conteneur ZigBee2MQTT
+      - mosquitto
+    volumes:
+      - ./zigbee2mqtt:/app/data
+      - /run/udev:/run/udev:ro
+    ports:
+    #Port Zigbee2MQTT
+      - 8080:8080
+    devices:
+    #Adresse de votre dongle usb ZigBee à changer par la votre (uniquement avant les ':')
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    restart: unless-stopped
+
+volumes:
+  mosquitto_config:
+  mosquitto_data:
+  mosquitto_log:
+  zigbee_data:
