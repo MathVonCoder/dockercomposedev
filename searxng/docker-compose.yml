@@ -1,0 +1,25 @@
+services:
+  tor:
+    image: osminogin/tor-simple
+    restart: always
+    ports:
+      - 9050:9050
+    healthcheck:
+      test: sh -c "netstat -tulpn | grep 9050"
+  
+  searxng:
+    container_name: searxng
+    image: searxng/searxng
+    # restart: unless-stopped
+    restart: always
+    depends_on:
+      tor:
+        condition: service_healthy
+        # condition: service_started
+    ports:
+      - "8082:8080"
+    environment:
+        IMAGE_PROXY: "True"
+        BASE_URL: "https://localhost:8082"
+    volumes:
+        - "./searxng:/etc/searxng"
